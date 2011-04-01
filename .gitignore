@@ -1,0 +1,6 @@
+.sconf_temp
+.sconsign.dblite
+bubba-upnp
+config.h
+config.log
+*.o
