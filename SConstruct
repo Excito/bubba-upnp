@@ -21,8 +21,8 @@ colors['end'] = '\033[0m'
 
 #If the output is not a terminal, remove the colors
 if not sys.stdout.isatty():
-   for key, value in colors.iteritems():
-      colors[key] = ''
+    for key, value in colors.iteritems():
+        colors[key] = ''
 
 env = Environment()
 
@@ -118,15 +118,16 @@ def CheckPKG(context, name):
     context.Result( ret )
     for dep in depends:
         ret &= context.sconf.CheckPKG(dep.strip())
-    checked_packages[key] = ret
+        checked_packages[key] = ret
+    
     return ret
 
 conf = Configure(
     env,
     config_h="config.h",
     custom_tests = {
-    'CheckPKGConfig' : CheckPKGConfig,
-    'CheckPKG' : CheckPKG
+        'CheckPKGConfig' : CheckPKGConfig,
+        'CheckPKG' : CheckPKG
     }
 )
 
@@ -135,35 +136,38 @@ if not env.GetOption('clean') and not env.GetOption('help'):
     if 'CC' in os.environ:
         env.Replace(CC = os.environ['CC'])
         print(">> Using compiler " + os.environ['CC'])
-    
+
     if 'CFLAGS' in os.environ:
         env.Replace(CFLAGS = os.environ['CFLAGS'])
         print(">> Appending custom build flags : " + os.environ['CFLAGS'])
-    
+
     if 'LDFLAGS' in os.environ:
         env.Append(LINKFLAGS = os.environ['LDFLAGS'])
         print(">> Appending custom link flags : " + os.environ['LDFLAGS'])
-    
-    
+
+
     if not conf.CheckPKGConfig('0.15.0'):
         print 'pkg-config >= 0.15.0 not found.'
         Exit(1)
     
-    if not conf.CheckPKG('libeutils >= 0.7.38'):
-        Exit(1)
-
     if not conf.CheckPKG('gupnp-1.0'):
         Exit(1)
-	
+    
+    if not conf.CheckLib('boost_thread-mt'):
+        Exit(1)
+
+    if not conf.CheckLib('boost_program_options-mt'):
+        Exit(1)
+
 
 env = conf.Finish()
 
 env.Append(CCFLAGS='-Wall -g -O3')
 env.Append(CPPDEFINES=['_GNU_SOURCE', ('_FILE_OFFSET_BITS','64'), '_REENTRANT',
-                      'HAVE_CONFIG_H'])
+                       'HAVE_CONFIG_H'])
 
 
-env.ParseConfig("pkg-config --cflags --libs libeutils gupnp-1.0")
+env.ParseConfig("pkg-config --cflags --libs gupnp-1.0")
 sources = [ 'main.cpp', 'igd.cpp' ]
 
 bubba_upnp = env.Program(target = "bubba-upnp", source = sources)

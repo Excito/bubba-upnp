@@ -3,58 +3,120 @@
 #endif
 
 #include <iostream>
+#include <fstream>
 
 #include <syslog.h>
+#include <csignal>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string>
 #include <string.h>
-
+#include <boost/program_options.hpp>
+#include <boost/bind.hpp>
 
 #include "igd.h"
 
+namespace po = boost::program_options;
 
 using namespace std;
 
+IGD igd;
+
+void shutdown(int) {
+	igd.stop();
+	exit(0);
+}
+
 int main(int argc, char** argv){
+	
+	po::variables_map vm;        
+	//daemon(0,0);
 
-	if( argc < 4 || (strcmp(argv[1], "add") == 0 && argc < 6) ) {
-		cout << "Usage: " << argv[0] << " add protocol local_ip local_port remote_port" << endl;
-		cout << "       " << argv[0] << " del protocol remote_port" << endl;
-		return 1;
-	}
+    try {
+        string config_file;
 
-	openlog( "bubba-easyfind", LOG_PERROR,LOG_DAEMON );
+        po::options_description generic("Generic options");
+        generic.add_options()
+            ("version", "print version string")
+            ("help", "show this help message")
+            ("config,c", po::value<string>(&config_file)->default_value("/etc/bubba-upnp.conf"), "read this config file")
+        ;
+
+        po::options_description config("Configuration");
+        config.add_options()
+			("ip", po::value<string>(), "local IP address")
+			("port", po::value< vector<int> >()->composing(), "ports to keep open")
+        ;
+        
+        po::options_description cmdline_options;
+        cmdline_options.add(generic).add(config);
+
+        po::options_description config_file_options;
+        config_file_options.add(config);
+
+        po::options_description visible("");
+        visible.add(generic).add(config);
+
+        po::store(po::parse_command_line(argc, argv, cmdline_options), vm);
+        po::notify(vm);    
+
+        if (vm.count("help")) {
+            cout << visible << endl;
+            return 1;
+        }
+        if (vm.count("version")) {
+            cout << "bubba-upnp, version 0.1" << endl;
+            return 0;
+        }
+
+        ifstream ifs(config_file.c_str());
+        if (ifs)
+        {
+            store(parse_config_file(ifs, config_file_options), vm);
+            notify(vm);
+        }
+
+        if (!vm.count("ip"))
+        {
+			cout << "No IP was given" << endl;
+			return 1;
+		}
+
+        if (!vm.count("port"))
+        {
+			cout << "No ports specified" << endl;
+			return 1;
+		}
+
+    }
+    catch(exception& e) {
+        cerr << "error: " << e.what() << endl;
+        return 1;
+    }
+    catch(...) {
+        cerr << "Exception of unknown type!" << endl;
+    }
+
+
+	openlog( "bubba-upnp", LOG_PERROR,LOG_DAEMON );
 
 	syslog( LOG_NOTICE,"Application starting" );
 	setlogmask(LOG_UPTO(LOG_DEBUG));
 
-	string cmd = argv[1];
 
-	char *protocol = argv[2], *lip;
-	int lport, rport;
+	igd.start(
+			vm["ip"].as<string>(), 
+			vm["port"].as< vector<int> >()
+			);
 
-	IGD& i=IGD::Instance();
-	sleep(3);
-	i.dumpMap();
+	signal(SIGTERM, shutdown);
+	signal(SIGINT, shutdown);
+	signal(SIGQUIT, shutdown);
 
-	if( cmd == "add" ) {
-		lip = argv[3];
-		lport = atoi(argv[4]);
-		rport = atoi(argv[5]);
-		cout << "Adding mapping" << endl;
-		i.addPortMapping(lip, lport, rport, protocol);
+	igd.join();
 
-	} else if( cmd == "del" ) {
-		rport = atoi(argv[3]);
-		cout << "Removing mapping"<<endl;
-		i.removePortMapping(rport,protocol);
 
-	} else {
-		cout << "Unknown command " << cmd << endl;
-		return 2;
-	}
-	sleep(100);
+	while(1);
 
 	return 0;
 }
