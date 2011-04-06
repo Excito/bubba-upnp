@@ -1,0 +1,14 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	scons
+
+override_dh_auto_clean:
+	scons -c
+	rm -f config.log
+
+override_dh_auto_install:
+	DESTDIR=debian/tmp scons install

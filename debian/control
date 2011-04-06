@@ -1,0 +1,21 @@
+Source: bubba-upnp
+Section: admin
+Priority: extra
+Maintainer: Carl Fürstenberg <carl@excito.com>
+Build-Depends: 
+ debhelper (>=8), 
+ scons, 
+ pkg-config, 
+ libboost-regex-dev (>= 1.42), 
+ libboost-thread-dev (>= 1.42), 
+ libboost-program-options-dev (>= 1.42),
+ libgupnp-1.0-dev
+Standards-Version: 3.9.1
+
+Package: bubba-upnp
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Bubba upnp helper daemon
+ A daemon that ensures port penetration through external 
+ routers and updated IP for easyfind service if external
+ router gets new external IP 

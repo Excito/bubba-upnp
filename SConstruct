@@ -131,8 +131,13 @@ conf = Configure(
     }
 )
 
+destdir=""
+if 'DESTDIR' in os.environ:
+    destdir = os.environ['DESTDIR']
+    print(">> Using destdir " + destdir)
 
 if not env.GetOption('clean') and not env.GetOption('help'):
+
     if 'CC' in os.environ:
         env.Replace(CC = os.environ['CC'])
         print(">> Using compiler " + os.environ['CC'])
@@ -175,6 +180,6 @@ sources = [ 'main.cpp', 'igd.cpp' ]
 
 bubba_upnp = env.Program(target = "bubba-upnp", source = sources)
 
-env.Install(bindir, [bubba_upnp])
+env.Install(destdir + bindir, [bubba_upnp])
 
-env.Alias('install', bindir)
+env.Alias('install', destdir + bindir)
