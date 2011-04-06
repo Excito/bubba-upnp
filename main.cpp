@@ -23,6 +23,11 @@ using namespace std;
 IGD igd;
 
 void shutdown(int) {
+	static int counter = 0;
+	if(++counter > 2) {
+		// die!
+		exit(1);
+	}
 	igd.stop();
 	exit(0);
 }
@@ -114,9 +119,6 @@ int main(int argc, char** argv){
 	signal(SIGQUIT, shutdown);
 
 	igd.join();
-
-
-	while(1);
 
 	return 0;
 }

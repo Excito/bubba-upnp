@@ -352,9 +352,9 @@ void IGD::join() {
 }
 
 void IGD::stop() {
-	syslog(LOG_DEBUG, "Stopping IGD UPNP service");
-	this->removeAllPorts();
 	if( g_main_loop_is_running (main_loop) ) {
+		syslog(LOG_DEBUG, "Stopping IGD UPNP service");
+		this->removeAllPorts();
 		g_main_loop_quit(main_loop);
 	}
 }

@@ -165,7 +165,7 @@ if not env.GetOption('clean') and not env.GetOption('help'):
 
 env = conf.Finish()
 
-env.Append(CCFLAGS='-Wall -g -O3')
+env.Append(CCFLAGS='-Wall -Wextra -g -O3')
 env.Append(CPPDEFINES=['_GNU_SOURCE', ('_FILE_OFFSET_BITS','64'), '_REENTRANT',
                        'HAVE_CONFIG_H'])
 
