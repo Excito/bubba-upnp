@@ -49,8 +49,10 @@ int main(int argc, char** argv){
 
         po::options_description config("Configuration");
         config.add_options()
-			("ip", po::value<string>(), "local IP address")
-			("port", po::value< vector<int> >()->composing(), "ports to keep open")
+			("interface", po::value<string>()->default_value("eth0"), "interface to query MAC-address from")
+			("enable-port-forward", "enable port forwarding")
+			("ip", po::value<string>(), "local IP address for port forwarding")
+			("port", po::value< vector<int> >()->composing(), "keep port forwarded")
         ;
         
         po::options_description cmdline_options;
@@ -81,16 +83,18 @@ int main(int argc, char** argv){
             notify(vm);
         }
 
-        if (!vm.count("ip"))
-        {
-			cout << "No IP was given" << endl;
-			return 1;
-		}
+		if(vm.count("enable-port-forward")) {
+			if (!vm.count("ip"))
+			{
+				cout << "No IP was given" << endl;
+				return 1;
+			}
 
-        if (!vm.count("port"))
-        {
-			cout << "No ports specified" << endl;
-			return 1;
+			if (!vm.count("port"))
+			{
+				cout << "No ports specified" << endl;
+				return 1;
+			}
 		}
 
     }
@@ -109,10 +113,7 @@ int main(int argc, char** argv){
 	setlogmask(LOG_UPTO(LOG_DEBUG));
 
 
-	igd.start(
-			vm["ip"].as<string>(), 
-			vm["port"].as< vector<int> >()
-			);
+	igd.start(vm);
 
 	signal(SIGTERM, shutdown);
 	signal(SIGINT, shutdown);

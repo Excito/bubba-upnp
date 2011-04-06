@@ -28,6 +28,7 @@
 #include <vector>
 #include <libgupnp/gupnp-control-point.h>
 #include <boost/thread.hpp>
+#include <boost/program_options.hpp>
 
 
 typedef struct{
@@ -42,6 +43,8 @@ typedef std::map<std::string, igdevice> IgMap;
 class IGD{
 private:
 	boost::thread m_Thread;
+	std::string interface;
+	bool do_portforward;
 	std::string localhost;
 	std::vector<int> ports;
 	IgMap igmap;
@@ -57,8 +60,7 @@ private:
 
 public:
 	IGD(){}
-	void start(std::string localhost,
-			std::vector<int> ports);
+	void start(boost::program_options::variables_map vm);
 
 	void join();
 

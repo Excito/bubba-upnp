@@ -265,7 +265,9 @@ void IGD::addService(
 		){
 	this->igmap[udn].wanip=host;
 	this->igmap[udn].proxy=proxy;
-	this->registerPortMappings(udn);
+	if( this->do_portforward ) {
+		this->registerPortMappings(udn);
+	}
 	this->updateEasyfind();
 }
 
@@ -274,7 +276,9 @@ void IGD::removeDevice(string udn){
 }
 
 void IGD::removeService(string udn){
-	this->unregisterPortMappings(udn);
+	if( this->do_portforward ) {
+		this->unregisterPortMappings(udn);
+	}
 	this->igmap[udn].wanip="";
 	this->igmap[udn].proxy=NULL;
 }
@@ -337,12 +341,13 @@ void IGD::run(void){
 	g_object_unref (device_control_point);
 	g_object_unref (context);
 }
-void IGD::start(
-		std::string localhost,
-		std::vector<int> ports
-		) {
-	this->localhost = localhost;
-	this->ports = ports;
+void IGD::start(boost::program_options::variables_map vm) {
+	this->interface = vm["interface"].as<string>();
+	this->do_portforward = vm.count("enable-port-forward") > 0;
+	if( this->do_portforward ) {
+		this->localhost = vm["ip"].as<string>();
+		this->ports = vm["port"].as< vector<int> >();
+	}
 	syslog(LOG_DEBUG, "Starting IGD UPNP service");
 	m_Thread = boost::thread( &IGD::run, this );
 }
@@ -497,7 +502,7 @@ void IGD::updateEasyfind() {
 
 	multipart = soup_multipart_new (SOUP_FORM_MIME_TYPE_MULTIPART);
 	soup_multipart_append_form_string (multipart, "key", _get_key().c_str());
-	soup_multipart_append_form_string (multipart, "mac0", _get_mac("eth0").c_str());
+	soup_multipart_append_form_string (multipart, "mac0", _get_mac(this->interface).c_str());
 	msg = soup_form_request_new_from_multipart (EASYFIND_URL, multipart);
 	soup_multipart_free (multipart);
 
