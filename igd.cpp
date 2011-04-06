@@ -49,7 +49,7 @@ static string GetExternalIPAddress(GUPnPServiceProxy *proxy){
 
 
 static void device_proxy_available_cb (
-		GUPnPControlPoint *cp,
+		GUPnPControlPoint */*cp*/,
 		GUPnPDeviceProxy *proxy,
 		gpointer userdata
 		){
@@ -66,7 +66,7 @@ static void device_proxy_available_cb (
 }
 
 static void device_proxy_unavailable_cb (
-		GUPnPControlPoint *cp,
+		GUPnPControlPoint */*cp*/,
 		GUPnPDeviceProxy *proxy,
 		gpointer userdata
 		){
@@ -85,7 +85,7 @@ static void device_proxy_unavailable_cb (
 static void
 external_ip_address_changed (
 		GUPnPServiceProxy *proxy,
-		const char *variable,
+		const char */*variable*/,
 		GValue *value,
 		gpointer userdata
 		){
@@ -101,7 +101,7 @@ external_ip_address_changed (
 }
 
 static void service_proxy_available_cb (
-		GUPnPControlPoint *cp,
+		GUPnPControlPoint */*cp*/,
 		GUPnPServiceProxy *proxy,
 		gpointer userdata
 		){
@@ -133,7 +133,7 @@ static void service_proxy_available_cb (
 }
 
 static void service_proxy_unavailable_cb (
-		GUPnPControlPoint *cp,
+		GUPnPControlPoint */*cp*/,
 		GUPnPServiceProxy *proxy,
 		gpointer userdata
 		){
