@@ -52,6 +52,7 @@ private:
 	void removeAllPorts();
 	void registerPortMappings(std::string udn);
 	void unregisterPortMappings(std::string udn);
+	void updateEasyfind();
 	void run();
 
 public:

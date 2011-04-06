@@ -153,6 +153,9 @@ if not env.GetOption('clean') and not env.GetOption('help'):
     if not conf.CheckPKG('gupnp-1.0'):
         Exit(1)
     
+    if not conf.CheckLib('boost_regex-mt'):
+        Exit(1)
+
     if not conf.CheckLib('boost_thread-mt'):
         Exit(1)
 

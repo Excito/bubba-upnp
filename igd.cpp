@@ -6,9 +6,18 @@
 #include "igd.h"
 
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include <string.h>
+#include <net/if.h>
+#include <sys/ioctl.h>
+
+#include <boost/regex.hpp>
+
+#define EASYFIND_URL "https://easyfind.excito.org"
 
 using namespace std;
 
@@ -257,6 +266,7 @@ void IGD::addService(
 	this->igmap[udn].wanip=host;
 	this->igmap[udn].proxy=proxy;
 	this->registerPortMappings(udn);
+	this->updateEasyfind();
 }
 
 void IGD::removeDevice(string udn){
@@ -397,4 +407,118 @@ void IGD::unregisterPortMappings(string udn) {
 				this->igmap[udn].wanip.c_str()
 			  );
 	}
+}
+
+
+static string _get_mac(string interface) {
+
+	unsigned char cMacAddr[8]; // Server's MAC address
+	int nSD; // Socket descriptor
+	struct ifreq sIfReq; // Interface request
+	int ret;
+
+	nSD = socket( PF_INET, SOCK_STREAM, 0 );
+	if ( nSD < 0 )
+	{
+		syslog(
+				LOG_ERR,
+				"File %s: line %d: Socket failed",
+				__FILE__,
+				__LINE__
+			  );
+		return(0);
+	}
+	strncpy(sIfReq.ifr_name, interface.c_str(), IF_NAMESIZE);
+	if ( ioctl(nSD, SIOCGIFHWADDR, &sIfReq) != 0 )
+	{
+		// We failed to get the MAC address for the interface
+		syslog( 
+				LOG_ERR,
+				"File %s: line %d: Ioctl failed", 
+				__FILE__, 
+				__LINE__ 
+			  );
+		return(0);
+	}
+
+	memmove( (void *)&cMacAddr[0], (void *)&sIfReq.ifr_ifru.ifru_hwaddr.sa_data[0], 6 );
+
+	char *c_hwaddr;
+
+	ret = asprintf(&c_hwaddr, "%02X:%02X:%02X:%02X:%02X:%02X",
+			cMacAddr[0], 
+			cMacAddr[1], 
+			cMacAddr[2],
+			cMacAddr[3], 
+			cMacAddr[4], 
+			cMacAddr[5] 
+			);
+
+	if( ret < 0 ) {
+		syslog(
+				LOG_ERR,
+				"File: %s line %d: Failed to allocate string",
+				__FILE__, 
+				__LINE__ 
+				);
+	}
+	string hwaddr(c_hwaddr);
+
+	free(c_hwaddr);
+	return hwaddr;
+}
+static string slurp(ifstream& in) {
+    stringstream sstr;
+    sstr << in.rdbuf();
+    return sstr.str();
+}
+
+static string _get_key() {
+	boost::regex re("key=(\\S+)");
+	boost::smatch matches;
+	ifstream ifs("/proc/cmdline");
+	string str(slurp(ifs));
+	ifs.close();
+	syslog(LOG_DEBUG, "String: %s", str.c_str());
+	if(boost::regex_search(str, matches, re) != 0) {
+		string res(matches[1].first, matches[1].second);
+		return res;
+	} else {
+		return "zuwnerrb";
+	}
+}
+
+void IGD::updateEasyfind() {
+
+	SoupMultipart *multipart;
+	SoupMessage *msg;
+	SoupSession *session;
+	session = soup_session_sync_new();
+
+	multipart = soup_multipart_new (SOUP_FORM_MIME_TYPE_MULTIPART);
+	soup_multipart_append_form_string (multipart, "key", _get_key().c_str());
+	soup_multipart_append_form_string (multipart, "mac0", _get_mac("eth0").c_str());
+	msg = soup_form_request_new_from_multipart (EASYFIND_URL, multipart);
+	soup_multipart_free (multipart);
+
+	soup_session_send_message (session, msg);
+
+	if (!SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
+		syslog(
+				LOG_ERR,
+				"Error: Unexpected status %d, %s",
+				msg->status_code,
+				msg->reason_phrase
+				);
+	} else {
+		syslog(
+				LOG_DEBUG,
+				"Easyfind: %s",
+				msg->response_body->data
+			  );
+	}
+
+	g_object_unref (msg);
+	soup_session_abort (session);
+	g_object_unref (session);
 }
