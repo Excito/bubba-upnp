@@ -23,38 +23,38 @@ using namespace std;
 IGD igd;
 
 void shutdown(int) {
-	static int counter = 0;
-	if(++counter > 2) {
-		// die!
-		exit(1);
-	}
-	igd.stop();
-	exit(0);
+    static int counter = 0;
+    if(++counter > 2) {
+        // die!
+        exit(1);
+    }
+    igd.stop();
+    exit(0);
 }
 
 int main(int argc, char** argv){
-	
-	po::variables_map vm;        
-	//daemon(0,0);
+
+    po::variables_map vm;        
 
     try {
         string config_file;
 
         po::options_description generic("Generic options");
         generic.add_options()
-            ("version", "print version string")
-            ("help", "show this help message")
+            ("version,v", "print version string")
+            ("help,h", "show this help message")
+            ("forground,f", "Do not daemonize")
             ("config,c", po::value<string>(&config_file)->default_value("/etc/bubba-upnp.conf"), "read this config file")
-        ;
+            ;
 
         po::options_description config("Configuration");
         config.add_options()
-			("interface", po::value<string>()->default_value("eth0"), "interface to query MAC-address from")
-			("enable-port-forward", "enable port forwarding")
-			("ip", po::value<string>(), "local IP address for port forwarding")
-			("port", po::value< vector<int> >()->composing(), "keep port forwarded")
-        ;
-        
+            ("interface", po::value<string>()->default_value("eth0"), "interface to query MAC-address from")
+            ("enable-port-forward", "enable port forwarding")
+            ("ip", po::value<string>(), "local IP address for port forwarding")
+            ("port", po::value< vector<int> >()->composing(), "keep port forwarded")
+            ;
+
         po::options_description cmdline_options;
         cmdline_options.add(generic).add(config);
 
@@ -83,19 +83,19 @@ int main(int argc, char** argv){
             notify(vm);
         }
 
-		if(vm.count("enable-port-forward")) {
-			if (!vm.count("ip"))
-			{
-				cout << "No IP was given" << endl;
-				return 1;
-			}
+        if(vm.count("enable-port-forward")) {
+            if (!vm.count("ip"))
+            {
+                cout << "No IP was given" << endl;
+                return 1;
+            }
 
-			if (!vm.count("port"))
-			{
-				cout << "No ports specified" << endl;
-				return 1;
-			}
-		}
+            if (!vm.count("port"))
+            {
+                cout << "No ports specified" << endl;
+                return 1;
+            }
+        }
 
     }
     catch(exception& e) {
@@ -105,21 +105,23 @@ int main(int argc, char** argv){
     catch(...) {
         cerr << "Exception of unknown type!" << endl;
     }
+    if(!vm.count("forground"))  {
+        daemon(0,0);
+    }
+
+    openlog( "bubba-upnp", LOG_PERROR,LOG_DAEMON );
+
+    syslog( LOG_NOTICE,"Application starting" );
+    setlogmask(LOG_UPTO(LOG_DEBUG));
 
 
-	openlog( "bubba-upnp", LOG_PERROR,LOG_DAEMON );
+    igd.start(vm);
 
-	syslog( LOG_NOTICE,"Application starting" );
-	setlogmask(LOG_UPTO(LOG_DEBUG));
+    signal(SIGTERM, shutdown);
+    signal(SIGINT, shutdown);
+    signal(SIGQUIT, shutdown);
 
+    igd.join();
 
-	igd.start(vm);
-
-	signal(SIGTERM, shutdown);
-	signal(SIGINT, shutdown);
-	signal(SIGQUIT, shutdown);
-
-	igd.join();
-
-	return 0;
+    return 0;
 }
