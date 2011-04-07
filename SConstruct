@@ -178,14 +178,14 @@ if not env.GetOption('clean') and not env.GetOption('help'):
     if not conf.CheckLib('boost_program_options-mt'):
         Exit(1)
 
+    conf.env.Append(CCFLAGS='-Wall -Wextra -g -O3')
+    conf.env.Append(CPPDEFINES=['_GNU_SOURCE', ('_FILE_OFFSET_BITS','64'), '_REENTRANT',
+                           'HAVE_CONFIG_H'])
+
+    conf.env.ParseConfig("pkg-config --cflags --libs gupnp-1.0 libbsd")
+
 env = conf.Finish()
 
-env.Append(CCFLAGS='-Wall -Wextra -g -O3')
-env.Append(CPPDEFINES=['_GNU_SOURCE', ('_FILE_OFFSET_BITS','64'), '_REENTRANT',
-                       'HAVE_CONFIG_H'])
-
-
-env.ParseConfig("pkg-config --cflags --libs gupnp-1.0 libbsd")
 sources = [ 'main.cpp', 'igd.cpp' ]
 
 bubba_igd = env.Program(target = "bubba-igd", source = sources)
