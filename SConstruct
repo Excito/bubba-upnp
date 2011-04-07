@@ -166,6 +166,9 @@ if not env.GetOption('clean') and not env.GetOption('help'):
     if not conf.CheckPKG('gupnp-1.0'):
         Exit(1)
 
+    if not conf.CheckPKG('libbsd'):
+        Exit(1)
+
     if not conf.CheckLib('boost_regex-mt'):
         Exit(1)
 
@@ -182,7 +185,7 @@ env.Append(CPPDEFINES=['_GNU_SOURCE', ('_FILE_OFFSET_BITS','64'), '_REENTRANT',
                        'HAVE_CONFIG_H'])
 
 
-env.ParseConfig("pkg-config --cflags --libs gupnp-1.0")
+env.ParseConfig("pkg-config --cflags --libs gupnp-1.0 libbsd")
 sources = [ 'main.cpp', 'igd.cpp' ]
 
 bubba_igd = env.Program(target = "bubba-igd", source = sources)

@@ -15,6 +15,7 @@
 #include <cerrno>
 #include <syslog.h>
 #include <unistd.h>
+#include <libutil.h>
 
 #include "igd.h"
 
@@ -28,15 +29,17 @@ void shutdown(int) {
     static int counter = 0;
     if(++counter > 2) {
         // die!
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     igd.stop();
-    exit(0);
+    exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char** argv){
 
     po::variables_map vm;        
+    struct pidfh *pfh = 0;
+    pid_t otherpid;
 
     try {
         string config_file;
@@ -46,6 +49,7 @@ int main(int argc, char** argv){
             ("version,v", "print version string")
             ("help,h", "show this help message")
             ("forground,f", "Do not daemonize")
+            ("pidfile", po::value<string>()->default_value("/var/run/bubba-igd.pid"), "Pidfile to use")
             ("config,c", po::value<string>(&config_file)->default_value("/etc/bubba-igd.conf"), "read this config file")
             ;
 
@@ -71,11 +75,11 @@ int main(int argc, char** argv){
 
         if (vm.count("help")) {
             cout << visible << endl;
-            return 1;
+            exit(EXIT_FAILURE);
         }
         if (vm.count("version")) {
             cout << "bubba-igd, version " << VERSION << endl;
-            return 0;
+            exit(EXIT_SUCCESS);
         }
 
         ifstream ifs(config_file.c_str());
@@ -89,13 +93,13 @@ int main(int argc, char** argv){
             if (!vm.count("ip"))
             {
                 cout << "No IP was given" << endl;
-                return 1;
+                exit(EXIT_FAILURE);
             }
 
             if (!vm.count("port"))
             {
                 cout << "No ports specified" << endl;
-                return 1;
+                exit(EXIT_FAILURE);
             }
         }
 
@@ -108,9 +112,24 @@ int main(int argc, char** argv){
         cerr << "Exception of unknown type!" << endl;
     }
     if(!vm.count("forground"))  {
-        if(daemon(0,0) != 0) {
-            cerr << "error: " << strerror(errno) << endl;
+
+        pfh = pidfile_open(vm["pidfile"].as<string>().c_str(), 0600, &otherpid);
+        if (pfh == NULL) {
+            if (errno == EEXIST) {
+                cerr << "Daemon already running, pid: " << (intmax_t)otherpid << endl;
+                exit(EXIT_FAILURE);
+            }
+            /* If we cannot create pidfile from other reasons, only warn. */
+            cerr << "Cannot open or create pidfile" << endl;
         }
+
+        if(daemon(0,0) == -1) {
+            cerr << "error: " << strerror(errno) << endl;
+            pidfile_remove(pfh);
+            exit(EXIT_FAILURE);
+        }
+        pidfile_write(pfh);
+
     }
 
     openlog( "bubba-igd", LOG_PERROR,LOG_DAEMON );
@@ -127,5 +146,9 @@ int main(int argc, char** argv){
 
     igd.join();
 
-    return 0;
+    if(!vm.count("forground"))  {
+        pidfile_remove(pfh);
+
+    }
+    exit(EXIT_SUCCESS);
 }

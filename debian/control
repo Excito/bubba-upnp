@@ -9,7 +9,8 @@ Build-Depends:
  libboost-regex-dev (>= 1.42), 
  libboost-thread-dev (>= 1.42), 
  libboost-program-options-dev (>= 1.42),
- libgupnp-1.0-dev
+ libgupnp-1.0-dev,
+ libbsd-dev
 Standards-Version: 3.9.1
 
 Package: bubba-igd
