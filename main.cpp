@@ -74,7 +74,7 @@ int main(int argc, char** argv){
             return 1;
         }
         if (vm.count("version")) {
-            cout << "bubba-igd, version 0.1" << endl;
+            cout << "bubba-igd, version " << VERSION << endl;
             return 0;
         }
 

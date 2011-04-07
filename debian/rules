@@ -1,14 +1,16 @@
 #!/usr/bin/make -f
 
+VERSION := $(if $(wildcard .git),$(shell git describe --always),$(shell dpkg-parsechangelog | sed -n -e 's/^Version: //p'))
+
 %:
 	dh $@
 
 override_dh_auto_build:
-	scons
+	VERSION="$(VERSION)" scons
 
 override_dh_auto_clean:
-	scons -c
+	VERSION="$(VERSION)" scons -c
 	rm -f config.log
 
 override_dh_auto_install:
-	DESTDIR=debian/tmp scons install
+	VERSION="$(VERSION)" DESTDIR=debian/tmp scons install

@@ -119,7 +119,7 @@ def CheckPKG(context, name):
     for dep in depends:
         ret &= context.sconf.CheckPKG(dep.strip())
         checked_packages[key] = ret
-    
+
     return ret
 
 conf = Configure(
@@ -150,14 +150,21 @@ if not env.GetOption('clean') and not env.GetOption('help'):
         env.Append(LINKFLAGS = os.environ['LDFLAGS'])
         print(">> Appending custom link flags : " + os.environ['LDFLAGS'])
 
+    conf.config_h_text += "\n"
+    if 'VERSION' in os.environ:
+        ver = os.environ['VERSION']
+        conf.Define("VERSION", "\"%s\""%os.environ['VERSION'], "Current package version")
+        print(">> Setting custom version : " + os.environ['VERSION'])
+    else:
+        conf.Define("VERSION", "\"0.0\"", "Current package version")
 
     if not conf.CheckPKGConfig('0.15.0'):
         print 'pkg-config >= 0.15.0 not found.'
         Exit(1)
-    
+
     if not conf.CheckPKG('gupnp-1.0'):
         Exit(1)
-    
+
     if not conf.CheckLib('boost_regex-mt'):
         Exit(1)
 
@@ -166,7 +173,6 @@ if not env.GetOption('clean') and not env.GetOption('help'):
 
     if not conf.CheckLib('boost_program_options-mt'):
         Exit(1)
-
 
 env = conf.Finish()
 
