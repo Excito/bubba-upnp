@@ -46,7 +46,7 @@ int main(int argc, char** argv){
             ("version,v", "print version string")
             ("help,h", "show this help message")
             ("forground,f", "Do not daemonize")
-            ("config,c", po::value<string>(&config_file)->default_value("/etc/bubba-upnp.conf"), "read this config file")
+            ("config,c", po::value<string>(&config_file)->default_value("/etc/bubba-igd.conf"), "read this config file")
             ;
 
         po::options_description config("Configuration");
@@ -74,7 +74,7 @@ int main(int argc, char** argv){
             return 1;
         }
         if (vm.count("version")) {
-            cout << "bubba-upnp, version 0.1" << endl;
+            cout << "bubba-igd, version 0.1" << endl;
             return 0;
         }
 
@@ -113,7 +113,7 @@ int main(int argc, char** argv){
         }
     }
 
-    openlog( "bubba-upnp", LOG_PERROR,LOG_DAEMON );
+    openlog( "bubba-igd", LOG_PERROR,LOG_DAEMON );
 
     syslog( LOG_NOTICE,"Application starting" );
     setlogmask(LOG_UPTO(LOG_DEBUG));

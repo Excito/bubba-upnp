@@ -1,8 +1,8 @@
 /*
 
-   bubba-upnp - http://www.excito.com/
+   bubba-igd - http://www.excito.com/
 
-   Igd.h - this file is part of bubba-upnp.
+   Igd.h - this file is part of bubba-igd.
 
    Copyright (C) 2009 Tor Krill <tor@excito.com>
    Copyright (C) 2011 Carl Fürstenberg <tor@excito.com>

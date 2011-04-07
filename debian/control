@@ -1,4 +1,4 @@
-Source: bubba-upnp
+Source: bubba-igd
 Section: admin
 Priority: extra
 Maintainer: Carl Fürstenberg <carl@excito.com>
@@ -12,10 +12,10 @@ Build-Depends:
  libgupnp-1.0-dev
 Standards-Version: 3.9.1
 
-Package: bubba-upnp
+Package: bubba-igd
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: Bubba upnp helper daemon
+Description: Bubba igd helper daemon
  A daemon that ensures port penetration through external 
  routers and updated IP for easyfind service if external
  router gets new external IP 

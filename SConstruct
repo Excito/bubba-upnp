@@ -178,8 +178,8 @@ env.Append(CPPDEFINES=['_GNU_SOURCE', ('_FILE_OFFSET_BITS','64'), '_REENTRANT',
 env.ParseConfig("pkg-config --cflags --libs gupnp-1.0")
 sources = [ 'main.cpp', 'igd.cpp' ]
 
-bubba_upnp = env.Program(target = "bubba-upnp", source = sources)
+bubba_igd = env.Program(target = "bubba-igd", source = sources)
 
-env.Install(destdir + bindir, [bubba_upnp])
+env.Install(destdir + bindir, [bubba_igd])
 
 env.Alias('install', destdir + bindir)
