@@ -337,9 +337,16 @@ void IGD::run(void){
 
 	/* Clean up */
 	g_main_loop_unref (main_loop);
-	g_object_unref (service_control_point);
-	g_object_unref (device_control_point);
-	g_object_unref (context);
+
+    if(service_control_point) {
+        g_object_unref (service_control_point);
+    }
+    if(device_control_point) {
+        g_object_unref (device_control_point);
+    }
+    if(context) {
+        g_object_unref (context);
+    }
 }
 void IGD::start(boost::program_options::variables_map vm) {
 	this->interface = vm["interface"].as<string>();

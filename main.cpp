@@ -4,15 +4,17 @@
 
 #include <iostream>
 #include <fstream>
-
-#include <syslog.h>
-#include <csignal>
-#include <stdlib.h>
-#include <unistd.h>
 #include <string>
-#include <string.h>
+
 #include <boost/program_options.hpp>
 #include <boost/bind.hpp>
+
+#include <csignal>
+#include <cstdlib>
+#include <cstring>
+#include <cerrno>
+#include <syslog.h>
+#include <unistd.h>
 
 #include "igd.h"
 
@@ -106,7 +108,9 @@ int main(int argc, char** argv){
         cerr << "Exception of unknown type!" << endl;
     }
     if(!vm.count("forground"))  {
-        daemon(0,0);
+        if(daemon(0,0) != 0) {
+            cerr << "error: " << strerror(errno) << endl;
+        }
     }
 
     openlog( "bubba-upnp", LOG_PERROR,LOG_DAEMON );
