@@ -1,3 +1,19 @@
+bubba-igd (0.2) vincent hugo; urgency=low
+
+  * Making an actual working daemon
+  * Adding easyfind update support
+  * Indicate unused parameters
+  * Adding some runtime fixes and compile addons
+  * Adding option whenever portforwarding should be done or not
+  * adding Debian build system
+  * Adding forground option
+  * Cleanup of references and ensure daemonization
+  * switch upnp to igd in names
+  * dynamic version
+  * Adding init script
+
+ -- Carl Fürstenberg <carl@excito.com>  Thu, 07 Apr 2011 14:10:09 +0200
+
 bubba-igd (0.1) vincent hugo; urgency=low
 
   * Initial release
