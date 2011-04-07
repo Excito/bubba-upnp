@@ -67,19 +67,20 @@ AddOption(
 prefix = GetOption('prefix')
 
 AddOption(
-    '--bindir',
-    dest='bindir',
+    '--sbindir',
+    dest='sbindir',
     type='string',
     nargs=1,
     action='store',
     metavar='DIR',
-    default='%s/bin' % prefix,
+    default='%s/sbin' % prefix,
     help='installation binary files prefix'
 )
 
-bindir = GetOption('bindir')
+sbindir = GetOption('sbindir')
 
 # below three variables are not yet used
+bindir = "%s/bin" % prefix
 libdir = "%s/lib" % prefix
 includedir = "%s/include" % prefix
 datadir = "%s/share" % prefix
@@ -186,6 +187,6 @@ sources = [ 'main.cpp', 'igd.cpp' ]
 
 bubba_igd = env.Program(target = "bubba-igd", source = sources)
 
-env.Install(destdir + bindir, [bubba_igd])
+env.Install(destdir + sbindir, [bubba_igd])
 
-env.Alias('install', destdir + bindir)
+env.Alias('install', destdir + sbindir)

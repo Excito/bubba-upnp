@@ -1,3 +1,9 @@
+bubba-igd (0.3) vincent hugo; urgency=low
+
+  * install into sbin dir
+
+ -- Carl Fürstenberg <carl@excito.com>  Thu, 07 Apr 2011 14:24:30 +0200
+
 bubba-igd (0.2) vincent hugo; urgency=low
 
   * Making an actual working daemon
