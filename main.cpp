@@ -26,13 +26,7 @@ using namespace std;
 IGD igd;
 
 void shutdown(int) {
-    static int counter = 0;
-    if(++counter > 2) {
-        // die!
-        exit(EXIT_FAILURE);
-    }
     igd.stop();
-    exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char** argv){
@@ -92,7 +86,7 @@ int main(int argc, char** argv){
         if(vm.count("enable-port-forward")) {
             if (!vm.count("port"))
             {
-                cout << "No ports specified" << endl;
+                cerr << "No ports specified" << endl;
                 exit(EXIT_FAILURE);
             }
         }
@@ -140,9 +134,9 @@ int main(int argc, char** argv){
 
     igd.join();
 
-    if(!vm.count("forground"))  {
-        pidfile_remove(pfh);
+    pidfile_remove(pfh);
 
-    }
+    closelog();
+
     exit(EXIT_SUCCESS);
 }
