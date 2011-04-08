@@ -57,6 +57,7 @@ static string _get_local_ip_address(const char *if_name) {
         ifaddrs_struct=ifaddrs_struct->ifa_next;
     }
 
+    throw no_valid_interface_exception(if_name);
     return NULL;
 }
 
@@ -394,7 +395,6 @@ void IGD::start(boost::program_options::variables_map vm) {
 	this->do_portforward = vm.count("enable-port-forward") > 0;
 	this->do_easyfind = vm.count("enable-easyfind") > 0;
 	if( this->do_portforward ) {
-		this->localhost = _get_local_ip_address(this->interface.c_str());
 		this->ports = vm["port"].as< vector<int> >();
 	}
 	syslog(LOG_NOTICE, "Starting IGD UPNP service");
@@ -407,45 +407,57 @@ void IGD::join() {
 
 void IGD::stop() {
 	if( g_main_loop_is_running (main_loop) ) {
-		syslog(LOG_DEBUG, "Stopping IGD UPNP service");
-		this->removeAllPorts();
+		syslog(LOG_NOTICE, "Stopping IGD UPNP service");
 		g_main_loop_quit(main_loop);
 	}
 }
 
-void IGD::removeAllPorts() {
-	for(
-			IgMap::iterator iIt=this->igmap.begin();
-			iIt!=this->igmap.end();
-			iIt++
-	   ){
-		this->unregisterPortMappings((*iIt).first);
-	}
-}
-
 void IGD::registerPortMappings(string udn) {
-	GUPnPServiceProxy *proxy = static_cast<GUPnPServiceProxy *>(this->igmap[udn].proxy);
+    GUPnPServiceProxy *proxy = static_cast<GUPnPServiceProxy *>(this->igmap[udn].proxy);
+    string ip;
 
-	for(
-			vector<int>::const_iterator iter = this->ports.begin();
-			iter != this->ports.end();
-			++iter
-	   ) {
-		openPort(proxy,this->localhost,*iter,*iter, "TCP");
-		openPort(proxy,this->localhost,*iter,*iter, "UDP");
-		syslog(
-				LOG_DEBUG,
-				"Opened port mapping %2$s:%1$d <-> %3$s:%1$d",
-				*iter,
-				this->localhost.c_str(),
-				this->igmap[udn].wanip.c_str()
-			  );
-	}
+    try {
+        ip = _get_local_ip_address(this->interface.c_str());
+    } catch( no_valid_interface_exception &e ) {
+        syslog(
+                LOG_ERR,
+                "Unable to access interface: %s",
+                e.what()
+              );
+        return;
+    }
+    for(
+            vector<int>::const_iterator iter = this->ports.begin();
+            iter != this->ports.end();
+            ++iter
+       ) {
+        openPort(proxy,ip,*iter,*iter, "TCP");
+        openPort(proxy,ip,*iter,*iter, "UDP");
+        syslog(
+                LOG_NOTICE,
+                "Opened port mapping %2$s:%1$d <-> %3$s:%1$d",
+                *iter,
+                ip.c_str(),
+                this->igmap[udn].wanip.c_str()
+              );
+    }
+
 }
 
 void IGD::unregisterPortMappings(string udn) {
 	GUPnPServiceProxy *proxy = static_cast<GUPnPServiceProxy *>(this->igmap[udn].proxy);
+    string ip;
 
+    try {
+        ip = _get_local_ip_address(this->interface.c_str());
+    } catch( no_valid_interface_exception &e ) {
+        syslog(
+                LOG_ERR,
+                "Unable to access interface: %s",
+                e.what()
+              );
+        return;
+    }
 	for(
 			vector<int>::const_iterator iter = this->ports.begin();
 			iter != this->ports.end();
@@ -457,7 +469,7 @@ void IGD::unregisterPortMappings(string udn) {
 				LOG_NOTICE,
 				"Closed port mapping %2$s:%1$d <-> %3$s:%1$d",
 				*iter,
-				this->localhost.c_str(),
+				ip.c_str(),
 				this->igmap[udn].wanip.c_str()
 			  );
 	}
@@ -492,7 +504,7 @@ static string _get_mac(string interface) {
 				__FILE__, 
 				__LINE__ 
 			  );
-		return(0);
+        throw no_valid_interface_exception(interface);
 	}
 
 	memmove( (void *)&cMacAddr[0], (void *)&sIfReq.ifr_ifru.ifru_hwaddr.sa_data[0], 6 );
@@ -550,7 +562,16 @@ void IGD::updateEasyfind() {
 
 	multipart = soup_multipart_new (SOUP_FORM_MIME_TYPE_MULTIPART);
 	soup_multipart_append_form_string (multipart, "key", _get_key().c_str());
-	soup_multipart_append_form_string (multipart, "mac0", _get_mac(this->interface).c_str());
+    try {
+        soup_multipart_append_form_string (multipart, "mac0", _get_mac(this->interface).c_str());
+    } catch ( no_valid_interface_exception &e ) {
+        syslog(
+                LOG_ERR,
+                "Unable to access interface: %s",
+                e.what()
+              );
+        return;
+    }
 	msg = soup_form_request_new_from_multipart (EASYFIND_URL, multipart);
 	soup_multipart_free (multipart);
 
@@ -566,7 +587,7 @@ void IGD::updateEasyfind() {
 	} else {
 		syslog(
 				LOG_DEBUG,
-				"Easyfind: %s",
+				"Got easyfind data: %s",
 				msg->response_body->data
 			  );
 	}

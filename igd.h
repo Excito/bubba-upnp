@@ -27,6 +27,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <exception>
 #include <libgupnp/gupnp-control-point.h>
 #include <boost/thread.hpp>
 #include <boost/program_options.hpp>
@@ -40,6 +41,11 @@ typedef struct{
 
 typedef std::map<std::string, igdevice> IgMap;
 
+class no_valid_interface_exception: public std::runtime_error {
+public:
+    no_valid_interface_exception(const std::string msg): std::runtime_error(msg) {}
+};
+
 
 class IGD{
 private:
@@ -47,20 +53,19 @@ private:
 	std::string interface;
 	bool do_portforward;
 	bool do_easyfind;
-	std::string localhost;
 	std::vector<int> ports;
 	IgMap igmap;
 	GMainLoop *main_loop;
 
 	IGD(const IGD&);
 	IGD& operator=(const IGD&);
-	void removeAllPorts();
 	void registerPortMappings(std::string udn);
 	void unregisterPortMappings(std::string udn);
 	void updateEasyfind();
 	void run();
 
 public:
+
 	IGD(){}
 	void start(boost::program_options::variables_map vm);
 

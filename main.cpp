@@ -40,9 +40,10 @@ int main(int argc, char** argv){
 
         po::options_description generic("Generic options");
         generic.add_options()
-            ("version,v", "print version string")
+            ("version,V", "print version string")
             ("help,h", "show this help message")
             ("forground,f", "Do not daemonize")
+            ("verbose,v", po::value<int>()->implicit_value(0), "Be more verbose")
             ("pidfile", po::value<string>()->default_value("/var/run/bubba-igd.pid"), "Pidfile to use")
             ("config,c", po::value<string>(&config_file)->default_value("/etc/bubba-igd.conf"), "read this config file")
             ;
@@ -123,7 +124,17 @@ int main(int argc, char** argv){
     openlog( "bubba-igd", LOG_PERROR,LOG_DAEMON );
 
     syslog( LOG_NOTICE,"Application starting" );
-    setlogmask(LOG_UPTO(LOG_DEBUG));
+
+    int v = vm["verbose"].as<int>();
+    if( v > 3 ) {
+        setlogmask(LOG_UPTO(LOG_DEBUG));
+    } else if( v > 2) {
+        setlogmask(LOG_UPTO(LOG_INFO));
+    } else if( v > 1) {
+        setlogmask(LOG_UPTO(LOG_NOTICE));
+    } else {
+        setlogmask(LOG_UPTO(LOG_ERR));
+    }
 
 
     igd.start(vm);
