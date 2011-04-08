@@ -1,7 +1,6 @@
 #include <libgupnp/gupnp-control-point.h>
 #include <libsoup/soup.h>
 
-#include <syslog.h>
 
 #include "igd.h"
 
@@ -11,15 +10,55 @@
 #include <string>
 #include <vector>
 
-#include <string.h>
+#include <cstring>
+#include <syslog.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
+#include <sys/types.h>
+#include <ifaddrs.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include <boost/regex.hpp>
 
 #define EASYFIND_URL "https://easyfind.excito.org"
 
 using namespace std;
+
+static string _get_local_ip_address(const char *if_name) {
+    string retval;
+    struct ifaddrs *ifaddrs_struct = NULL;
+
+    getifaddrs(&ifaddrs_struct);
+
+    while( ifaddrs_struct != NULL ) {
+        if( strcmp(ifaddrs_struct->ifa_name, if_name) == 0 ) {
+            struct sockaddr* sock_addr = ifaddrs_struct->ifa_addr;
+            if( sock_addr->sa_family==AF_INET ) {
+                char buf[INET_ADDRSTRLEN];
+                inet_ntop(
+                        AF_INET,
+                        &reinterpret_cast<struct sockaddr_in*>(sock_addr)->sin_addr,
+                        buf,
+                        INET_ADDRSTRLEN
+                        );
+                return string(buf);
+            } else if( sock_addr->sa_family==AF_INET6 ) {
+                char buf[INET6_ADDRSTRLEN];
+                inet_ntop(
+                        AF_INET6,
+                        &reinterpret_cast<struct sockaddr_in*>(sock_addr)->sin_addr,
+                        buf,
+                        INET6_ADDRSTRLEN
+                        );
+                return string(buf);
+            }
+        }
+        ifaddrs_struct=ifaddrs_struct->ifa_next;
+    }
+
+    return NULL;
+}
 
 static string GetExternalIPAddress(GUPnPServiceProxy *proxy){
 	GError *error = NULL;
@@ -352,7 +391,7 @@ void IGD::start(boost::program_options::variables_map vm) {
 	this->interface = vm["interface"].as<string>();
 	this->do_portforward = vm.count("enable-port-forward") > 0;
 	if( this->do_portforward ) {
-		this->localhost = vm["ip"].as<string>();
+		this->localhost = _get_local_ip_address(this->interface.c_str());
 		this->ports = vm["port"].as< vector<int> >();
 	}
 	syslog(LOG_DEBUG, "Starting IGD UPNP service");
