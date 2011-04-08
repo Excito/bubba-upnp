@@ -79,7 +79,7 @@ static string GetExternalIPAddress(GUPnPServiceProxy *proxy){
 		ret=ip;
 		g_free (ip);
 	} else {
-		syslog(LOG_NOTICE, "Error: %s",error->message);
+		syslog(LOG_DEBUG, "Error: %s",error->message);
 		g_error_free (error);
 	}
 
@@ -133,7 +133,7 @@ external_ip_address_changed (
 
 	GUPnPServiceInfo *info=GUPNP_SERVICE_INFO(proxy);
 	string udn = gupnp_service_info_get_udn(info);
-	syslog(LOG_DEBUG, "External IP changed: %s at %s", udn.c_str(), g_value_get_string(value));
+	syslog(LOG_INFO, "External IP changed: %s at %s", udn.c_str(), g_value_get_string(value));
 
 	i->addService(udn,g_value_get_string (value),proxy);
 
@@ -166,7 +166,7 @@ static void service_proxy_available_cb (
 				userdata
 				)
 	   ) {
-		syslog(LOG_ERR, "Failed to add ExternalIPAddress notification");
+		syslog(LOG_WARNING, "Failed to add ExternalIPAddress notification");
 	}
 
 }
@@ -227,7 +227,7 @@ static bool openPort(
 	if (error == NULL) {
 		ret=true;
 	} else {
-		syslog(LOG_NOTICE, "Error: %s",error->message);
+		syslog(LOG_DEBUG, "Error: %s",error->message);
 		g_error_free (error);
 		ret=false;
 	}
@@ -273,7 +273,7 @@ static bool closePort(
 	if (error == NULL) {
 		ret=true;
 	} else {
-		syslog(LOG_NOTICE, "Error: %s",error->message);
+		syslog(LOG_DEBUG, "Error: %s",error->message);
 		g_error_free (error);
 		ret=false;
 	}
@@ -397,7 +397,7 @@ void IGD::start(boost::program_options::variables_map vm) {
 		this->localhost = _get_local_ip_address(this->interface.c_str());
 		this->ports = vm["port"].as< vector<int> >();
 	}
-	syslog(LOG_DEBUG, "Starting IGD UPNP service");
+	syslog(LOG_NOTICE, "Starting IGD UPNP service");
 	m_Thread = boost::thread( &IGD::run, this );
 }
 
@@ -454,7 +454,7 @@ void IGD::unregisterPortMappings(string udn) {
 		closePort(proxy,*iter, "TCP");
 		closePort(proxy,*iter, "UDP");
 		syslog(
-				LOG_DEBUG,
+				LOG_NOTICE,
 				"Closed port mapping %2$s:%1$d <-> %3$s:%1$d",
 				*iter,
 				this->localhost.c_str(),
@@ -533,7 +533,6 @@ static string _get_key() {
 	ifstream ifs("/proc/cmdline");
 	string str(slurp(ifs));
 	ifs.close();
-	syslog(LOG_DEBUG, "String: %s", str.c_str());
 	if(boost::regex_search(str, matches, re) != 0) {
 		string res(matches[1].first, matches[1].second);
 		return res;
