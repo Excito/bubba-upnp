@@ -1,3 +1,11 @@
+bubba-igd (0.4) vincent hugo; urgency=low
+
+  * Reorder environment modification
+  * request IP from given interface
+  * optionalize easyfind functionallity
+
+ -- Carl Fürstenberg <carl@excito.com>  Fri, 08 Apr 2011 11:35:19 +0200
+
 bubba-igd (0.3) vincent hugo; urgency=low
 
   * install into sbin dir
