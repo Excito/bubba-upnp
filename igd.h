@@ -46,6 +46,7 @@ private:
 	boost::thread m_Thread;
 	std::string interface;
 	bool do_portforward;
+	bool do_easyfind;
 	std::string localhost;
 	std::vector<int> ports;
 	IgMap igmap;

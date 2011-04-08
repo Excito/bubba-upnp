@@ -57,6 +57,7 @@ int main(int argc, char** argv){
         config.add_options()
             ("interface", po::value<string>()->default_value("eth0"), "interface to query MAC-address from")
             ("enable-port-forward", "enable port forwarding")
+            ("enable-easyfind", "enable easyfind update")
             ("port", po::value< vector<int> >()->composing(), "keep port forwarded")
             ;
 

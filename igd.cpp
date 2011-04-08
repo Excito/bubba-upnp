@@ -307,7 +307,9 @@ void IGD::addService(
 	if( this->do_portforward ) {
 		this->registerPortMappings(udn);
 	}
-	this->updateEasyfind();
+    if( this->do_easyfind ) {
+        this->updateEasyfind();
+    }
 }
 
 void IGD::removeDevice(string udn){
@@ -390,6 +392,7 @@ void IGD::run(void){
 void IGD::start(boost::program_options::variables_map vm) {
 	this->interface = vm["interface"].as<string>();
 	this->do_portforward = vm.count("enable-port-forward") > 0;
+	this->do_easyfind = vm.count("enable-easyfind") > 0;
 	if( this->do_portforward ) {
 		this->localhost = _get_local_ip_address(this->interface.c_str());
 		this->ports = vm["port"].as< vector<int> >();
