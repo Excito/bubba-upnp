@@ -16,6 +16,7 @@
 #include <syslog.h>
 #include <unistd.h>
 #include <libutil.h>
+#include <execinfo.h>
 
 #include "igd.h"
 
@@ -29,7 +30,24 @@ void shutdown(int) {
     igd.stop();
 }
 
+
+void sigsegv_handler(int sig) {
+  void *array[10];
+  size_t size;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 10);
+
+  // print out all the frames to stderr
+  fprintf(stderr, "Error: signal %d:\n", sig);
+  backtrace_symbols_fd(array, size, 2);
+  exit(1);
+}
+
+
 int main(int argc, char** argv){
+
+    signal(SIGSEGV, sigsegv_handler);
 
     po::variables_map vm;        
     struct pidfh *pfh = 0;
@@ -125,23 +143,24 @@ int main(int argc, char** argv){
 
     syslog( LOG_NOTICE,"Application starting" );
 
-    int v = vm["verbose"].as<int>();
-    if( v > 3 ) {
-        setlogmask(LOG_UPTO(LOG_DEBUG));
-    } else if( v > 2) {
-        setlogmask(LOG_UPTO(LOG_INFO));
-    } else if( v > 1) {
-        setlogmask(LOG_UPTO(LOG_NOTICE));
+    if( vm.count("verbose") ) {
+        int v = vm["verbose"].as<int>();
+        if( v > 3 ) {
+            setlogmask(LOG_UPTO(LOG_DEBUG));
+        } else if( v > 2) {
+            setlogmask(LOG_UPTO(LOG_INFO));
+        } else if( v > 1) {
+            setlogmask(LOG_UPTO(LOG_NOTICE));
+        } else {
+            setlogmask(LOG_UPTO(LOG_ERR));
+        }
     } else {
         setlogmask(LOG_UPTO(LOG_ERR));
     }
 
-
     igd.start(vm);
 
     signal(SIGTERM, shutdown);
-    signal(SIGINT, shutdown);
-    signal(SIGQUIT, shutdown);
 
     igd.join();
 

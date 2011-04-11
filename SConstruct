@@ -178,7 +178,7 @@ if not env.GetOption('clean') and not env.GetOption('help'):
     if not conf.CheckLib('boost_program_options-mt'):
         Exit(1)
 
-    conf.env.Append(CCFLAGS='-Wall -Wextra -g -O3')
+    conf.env.Append(CCFLAGS='-Wall -Wextra -ggdb -O3')
     conf.env.Append(CPPDEFINES=['_GNU_SOURCE', ('_FILE_OFFSET_BITS','64'), '_REENTRANT',
                            'HAVE_CONFIG_H'])
 
