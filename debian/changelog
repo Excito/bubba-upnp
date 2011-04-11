@@ -1,3 +1,9 @@
+bubba-igd (0.7) vincent hugo; urgency=low
+
+  * Updating default verbose level
+
+ -- Carl Fürstenberg <carl@excito.com>  Mon, 11 Apr 2011 15:14:05 +0200
+
 bubba-igd (0.6) vincent hugo; urgency=low
 
   * Fix runtime error due to failed boost thing

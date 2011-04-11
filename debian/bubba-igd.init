@@ -17,7 +17,7 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="Bubba IGD daemon"
 NAME=bubba-igd
 DAEMON=/usr/sbin/$NAME
-DAEMON_ARGS=
+DAEMON_ARGS="--verbose=4" #make it really verbose
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 
